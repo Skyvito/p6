@@ -3,6 +3,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 
 const userRoutes = require("./routes/user");
+const sauceRoutes = require("./routes/sauce");
 
 //useNewUrlParser  est utilisé pour analyser correctement les URL de connexion MongoDB et useUnifiedTopology pour s'assurer que les mises à jour du pilote de MongoDB sont prises en compte
 
@@ -34,5 +35,6 @@ app.use((req, res, next) => {
 app.use(express.json());
 
 app.use("/api/auth", userRoutes);
+app.use("/api", sauceRoutes);
 //J'exporte
 module.exports = app;
