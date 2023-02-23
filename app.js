@@ -1,9 +1,10 @@
 //J'importe express
 const express = require("express");
 const mongoose = require("mongoose");
+
 const userRoutes = require("./routes/user");
 
-//je me connecte a une base de donnée mongoDB useNewUrlParser  est utilisé pour analyser correctement les URL de connexion MongoDB et useUnifiedTopology pour s'assurer que les mises à jour du pilote de MongoDB sont prises en compte
+//useNewUrlParser  est utilisé pour analyser correctement les URL de connexion MongoDB et useUnifiedTopology pour s'assurer que les mises à jour du pilote de MongoDB sont prises en compte
 
 mongoose
     .connect(
@@ -15,8 +16,8 @@ mongoose
 
 // Je créer l'application web
 const app = express();
+//pour autoriser les requêtes de toutes les origines :
 
-//permet à un client d'effectuer des requêtes depuis un nom de domaine différent de celui où l'API est hébergée.En utilisant différentes méthodes HTTP telles que GET, POST, PUT, DELETE, PATCH et OPTIONS.
 app.use((req, res, next) => {
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader(
@@ -32,5 +33,6 @@ app.use((req, res, next) => {
 // permet à l'application Express de comprendre les données JSON envoyées dans les requêtes POST, PUT et PATCH.
 app.use(express.json());
 
+app.use("/api/auth", userRoutes);
 //J'exporte
 module.exports = app;

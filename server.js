@@ -6,6 +6,7 @@ const app = require("./app");
 //configure le port 3000 comme port sur lequel le serveur va écouter
 const port = process.env.PORT || 3000;
 app.set("port", port);
+
 //Créer un serveur HTTP en utilisant le module http de Node.js  en lui passant l'objet app créé à l'aide du framework Express
 const server = http.createServer(app);
 // Ecouter le port
