@@ -2,6 +2,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 
+const path = require("path");
 const userRoutes = require("./routes/user");
 const sauceRoutes = require("./routes/sauce");
 
@@ -12,7 +13,9 @@ mongoose
         "mongodb+srv://vito:wS3eL7MB8D6WCR8g@cluster0.uttmyvh.mongodb.net/?retryWrites=true&w=majority",
         { useNewUrlParser: true, useUnifiedTopology: true }
     )
-    .then(() => console.log("Connexion à MongoDB réussie !"))
+    .then(() => {
+        console.log("Connexion à MongoDB réussie !");
+    })
     .catch(() => console.log("Connexion à MongoDB échouée !"));
 
 // Je créer l'application web
@@ -36,5 +39,6 @@ app.use(express.json());
 
 app.use("/api/auth", userRoutes);
 app.use("/api", sauceRoutes);
+app.use("/images", express.static(path.join(__dirname, "images")));
 //J'exporte
 module.exports = app;
