@@ -57,3 +57,41 @@ exports.deleteThing = (req, res, next) => {
             res.status(500).json({ error });
         });
 };
+
+exports.modifyThing = (req, res, next) => {
+    const updatedSauce = req.file
+        ? {
+              ...JSON.parse(req.body.sauce),
+              imageUrl: `${req.protocol}://${req.get("host")}/images/${
+                  req.file.filename
+              }`,
+          }
+        : { ...req.body };
+
+    delete updatedSauce._userId;
+    Sauce.findOne({ _id: req.params.id })
+        .then((sauce) => {
+            if (sauce.userId != req.auth.userId) {
+                res.status(401).json({ message: "Not authorized" });
+            } else {
+                if (req.file && sauce.imageUrl !== updatedSauce.imageUrl) {
+                    // Supprimer l'ancienne image
+                    const filename = sauce.imageUrl.split("/images/")[1];
+                    fs.unlink(`images/${filename}`, () => {
+                        console.log("Ancienne image supprimée !");
+                    });
+                }
+                Sauce.updateOne(
+                    { _id: req.params.id },
+                    { ...updatedSauce, _id: req.params.id }
+                )
+                    .then(() =>
+                        res.status(200).json({ message: "Objet modifié!" })
+                    )
+                    .catch((error) => res.status(401).json({ error }));
+            }
+        })
+        .catch((error) => {
+            res.status(400).json({ error });
+        });
+};
