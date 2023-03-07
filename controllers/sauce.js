@@ -1,5 +1,6 @@
 const Sauce = require("../models/Sauce");
 const fs = require("fs");
+const sanitize = require("mongo-sanitize");
 
 exports.getAllSauce = (req, res, next) => {
     Sauce.find()
@@ -14,12 +15,12 @@ exports.createSauce = (req, res, next) => {
             .json({ error: "Veuillez sélectionner une image" });
     }
 
-    const sauceObject = JSON.parse(req.body.sauce);
+    const sauceObject = JSON.parse(sanitize(req.body.sauce));
     delete sauceObject._id;
     delete sauceObject._userId;
     const sauce = new Sauce({
         ...sauceObject,
-        userId: req.auth.userId,
+        userId: sanitize(req.auth.userId),
         imageUrl: `${req.protocol}://${req.get("host")}/images/${
             req.file.filename
         }`,
@@ -67,7 +68,7 @@ exports.deleteSauce = (req, res, next) => {
 };
 
 exports.modifySauce = (req, res, next) => {
-    Sauce.findOne({ _id: req.params.id })
+    Sauce.findOne({ _id: sanitize(req.params.id) })
         .then((sauce) => {
             if (!sauce) {
                 if (req.file) {
@@ -77,17 +78,17 @@ exports.modifySauce = (req, res, next) => {
                     });
                 }
             }
-            if (sauce.userId != req.auth.userId) {
+            if (sauce.userId != sanitize(req.auth.userId)) {
                 res.status(401).json({ message: "Not authorized" });
             } else {
                 const updatedSauce = req.file
                     ? {
-                          ...JSON.parse(req.body.sauce),
+                          ...JSON.parse(sanitize(req.body.sauce)),
                           imageUrl: `${req.protocol}://${req.get(
                               "host"
                           )}/images/${req.file.filename}`,
                       }
-                    : { ...req.body };
+                    : { ...sanitize(req.body) };
 
                 delete updatedSauce._userId;
                 if (req.file) {
@@ -98,8 +99,8 @@ exports.modifySauce = (req, res, next) => {
                     });
                 }
                 Sauce.updateOne(
-                    { _id: req.params.id },
-                    { ...updatedSauce, _id: req.params.id }
+                    { _id: sanitize(req.params.id) },
+                    { ...updatedSauce, _id: sanitize(req.params.id) }
                 )
                     .then(() =>
                         res.status(200).json({ message: "Objet modifié!" })
@@ -113,8 +114,8 @@ exports.modifySauce = (req, res, next) => {
 };
 
 exports.likeSauce = (req, res, next) => {
-    const sauceId = req.params.id;
-    const userId = req.auth.userId;
+    const sauceId = sanitize(req.params.id);
+    const userId = sanitize(req.auth.userId);
     const like = req.body.like;
 
     // Vérifier que like est bien -1, 0 ou 1

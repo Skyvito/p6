@@ -1,16 +1,25 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
+const sanitize = require("mongo-sanitize");
+const passwordSchema = require("../models/passwordValidator");
 
 // Inscription d'un nouvel utilisateur
 exports.signup = (req, res, next) => {
+    if (!passwordSchema.validate(req.body.password)) {
+        return res.status(400).json({
+            message:
+                "Le mot de passe doit comporter entre 8 et 20 caractères et doit contenir au moins une majuscule et aucun espace.",
+        });
+    }
+
     // : j' utilise la fonction hash de bcrypt pour hasher le mot de passe fourni par l'utilisateur
     bcrypt
         .hash(req.body.password, 10)
         .then((hash) => {
             // je créé un nouvel objet User qui contient l'email fourni par l'utilisateur et le mot de passe hashé généré par la fonction bcrypt.hash.
             const user = new User({
-                email: req.body.email,
+                email: sanitize(req.body.email),
                 password: hash,
             });
 
@@ -28,7 +37,7 @@ exports.signup = (req, res, next) => {
 // Connexion d'un utilisateur existant
 exports.login = (req, res, next) => {
     // Recherche de l'utilisateur correspondant à l'adresse email fournie
-    User.findOne({ email: req.body.email })
+    User.findOne({ email: sanitize(req.body.email) })
         .then((user) => {
             // Si l'utilisateur n'est pas trouvé, renvoyer une erreur 401 Unauthorized
             if (!user) {
