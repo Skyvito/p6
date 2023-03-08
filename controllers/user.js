@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 const sanitize = require("mongo-sanitize");
 const passwordSchema = require("../models/passwordValidator");
+const validator = require("email-validator");
 
 // Inscription d'un nouvel utilisateur
 exports.signup = (req, res, next) => {
@@ -11,8 +12,9 @@ exports.signup = (req, res, next) => {
             message:
                 "Le mot de passe doit comporter entre 8 et 20 caractères et doit contenir au moins une majuscule et aucun espace.",
         });
+    } else if (!validator.validate(req.body.email)) {
+        return res.status(400).json({ error: "Adresse email invalide !" });
     }
-
     // : j' utilise la fonction hash de bcrypt pour hasher le mot de passe fourni par l'utilisateur
     bcrypt
         .hash(req.body.password, 10)

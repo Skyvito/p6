@@ -7,6 +7,10 @@ const app = require("./app");
 const port = process.env.PORT || 3000;
 app.set("port", port);
 
+const cors = require("cors");
+// Applique le middleware CORS à l'application
+app.use(cors());
+
 //Créer un serveur HTTP en utilisant le module http de Node.js  en lui passant l'objet app créé à l'aide du framework Express
 const server = http.createServer(app);
 // Ecouter le port

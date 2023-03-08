@@ -70,42 +70,43 @@ exports.deleteSauce = (req, res, next) => {
 exports.modifySauce = (req, res, next) => {
     Sauce.findOne({ _id: sanitize(req.params.id) })
         .then((sauce) => {
-            if (!sauce) {
+            if (sauce) {
+                if (sauce.userId != sanitize(req.auth.userId)) {
+                    res.status(403).json({ message: "Not authorized" });
+                } else {
+                    const updatedSauce = req.file
+                        ? {
+                              ...JSON.parse(sanitize(req.body.sauce)),
+                              imageUrl: `${req.protocol}://${req.get(
+                                  "host"
+                              )}/images/${req.file.filename}`,
+                          }
+                        : { ...sanitize(req.body) };
+
+                    delete updatedSauce._userId;
+                    if (req.file) {
+                        // Supprimer l'ancienne image
+                        const filename = sauce.imageUrl.split("/images/")[1];
+                        fs.unlink(`images/${filename}`, () => {
+                            console.log("Ancienne image supprimée !");
+                        });
+                    }
+                    Sauce.updateOne(
+                        { _id: sanitize(req.params.id) },
+                        { ...updatedSauce, _id: sanitize(req.params.id) }
+                    )
+                        .then(() =>
+                            res.status(200).json({ message: "Objet modifié!" })
+                        )
+                        .catch((error) => res.status(404).json({ error }));
+                }
+            } else {
                 if (req.file) {
-                    const filename = req.file.filename;
-                    fs.unlink(`images/${filename}`, () => {
+                    const noSaucefilename = req.file.filename;
+                    fs.unlink(`images/${noSaucefilename}`, () => {
                         console.log("Image supprimée !");
                     });
                 }
-            }
-            if (sauce.userId != sanitize(req.auth.userId)) {
-                res.status(401).json({ message: "Not authorized" });
-            } else {
-                const updatedSauce = req.file
-                    ? {
-                          ...JSON.parse(sanitize(req.body.sauce)),
-                          imageUrl: `${req.protocol}://${req.get(
-                              "host"
-                          )}/images/${req.file.filename}`,
-                      }
-                    : { ...sanitize(req.body) };
-
-                delete updatedSauce._userId;
-                if (req.file) {
-                    // Supprimer l'ancienne image
-                    const filename = sauce.imageUrl.split("/images/")[1];
-                    fs.unlink(`images/${filename}`, () => {
-                        console.log("Ancienne image supprimée !");
-                    });
-                }
-                Sauce.updateOne(
-                    { _id: sanitize(req.params.id) },
-                    { ...updatedSauce, _id: sanitize(req.params.id) }
-                )
-                    .then(() =>
-                        res.status(200).json({ message: "Objet modifié!" })
-                    )
-                    .catch((error) => res.status(404).json({ error }));
             }
         })
         .catch((error) => {
@@ -141,7 +142,6 @@ exports.likeSauce = (req, res, next) => {
                             message: "Vous avez déjà aimé cette sauce !",
                         });
                     case 0:
-                    case -1:
                         sauce.likes--;
                         sauce.usersLiked.splice(userLiked, 1);
                         break;
@@ -160,7 +160,6 @@ exports.likeSauce = (req, res, next) => {
                             message: "Vous avez déjà disliké cette sauce !",
                         });
                     case 0:
-                    case 1:
                         sauce.dislikes--;
                         sauce.usersDisliked.splice(userDisliked, 1);
                         break;
